@@ -2,14 +2,14 @@
 export const getServerSideProps = async () => {
   return {
     props: {
-      title: 'Home',
-      content: 'This is content for Home',
+      title: 'Blog',
+      content: 'This is content for Blog',
       timestamp: new Date().toISOString(),
     },
   };
 };
 
-export default function Home({ title, content, timestamp }) {
+export default function Blog({ title, content, timestamp }) {
   return (
     <div>
       <h1>{title}</h1>
