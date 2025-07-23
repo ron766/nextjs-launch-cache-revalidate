@@ -12,7 +12,7 @@ const nextConfig = {
           },
           {
             key: 'Cache-Tag',
-            value: 'blog, ',
+            value: 'data-mining-and-its-significance-in-business-analytics',
           },
         ],
       },
