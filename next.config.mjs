@@ -16,7 +16,7 @@ const nextConfig = {
           },
           {
             key: 'Cache-Tag-Debug',
-            value: 'data-mining-and-its-significance-in-business-analytics',
+            value: 'blog, data-mining-and-its-significance-in-business-analytics',
           },
         ],
       },
