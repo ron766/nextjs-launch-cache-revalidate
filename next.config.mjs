@@ -14,6 +14,10 @@ const nextConfig = {
             key: 'Cache-Tag',
             value: 'data-mining-and-its-significance-in-business-analytics',
           },
+          {
+            key: 'Cache-Tag-Debug',
+            value: 'data-mining-and-its-significance-in-business-analytics',
+          },
         ],
       },
     ];
