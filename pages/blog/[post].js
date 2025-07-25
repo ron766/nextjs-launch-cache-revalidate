@@ -8,15 +8,14 @@ import RenderComponents from '../../components/render-components';
 import ArchiveRelative from '../../components/archive-relative';
 
 
-export default function BlogPost({ blogPost, page, pageUrl }) {
+export default function BlogPost({ blogPost, pageUrl }) {
   
-  const [getPost, setPost] = useState({ banner: page, post: blogPost });
+  const [getPost, setPost] = useState({ post: blogPost });
   async function fetchData() {
     try {
       const entryRes = await getBlogPostRes(pageUrl);
-      const bannerRes = await getPageRes('/blog');
-      if (!entryRes || !bannerRes) throw new Error('Status: ' + 404);
-      setPost({ banner: bannerRes, post: entryRes });
+      if (!entryRes) throw new Error('Status: ' + 404);
+      setPost({ post: entryRes });
     } catch (error) {
       console.error(error);
     }
@@ -29,7 +28,7 @@ export default function BlogPost({ blogPost, page, pageUrl }) {
   const { post, banner } = getPost;
   return (
     <>
-      {banner ? (
+      {/* {banner ? (
         <RenderComponents
           pageComponents={banner.page_components}
           blogPost
@@ -39,7 +38,7 @@ export default function BlogPost({ blogPost, page, pageUrl }) {
         />
       ) : (
         <Skeleton height={400} />
-      )}
+      )} */}
       <div className='blog-container'>
         <article className='blog-detail'>
           {post && post.title ? (
@@ -94,15 +93,16 @@ export default function BlogPost({ blogPost, page, pageUrl }) {
 }
 export async function getServerSideProps({ params }) {
   try {
-    const page = await getPageRes('/blog');
+    // const page = await getPageRes('/blog');
     const posts = await getBlogPostRes(`/blog/${params.post}`);
-    if (!page || !posts) throw new Error('404');
+    // if (!page || !posts) throw new Error('404');
+    if (!posts) throw new Error('404');
 
     return {
       props: {
         pageUrl: `/blog/${params.post}`,
         blogPost: posts,
-        page,
+        // page,
       },
     };
   } catch (error) {
