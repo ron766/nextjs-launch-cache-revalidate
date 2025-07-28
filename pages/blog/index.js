@@ -63,6 +63,17 @@ export default function Blog({ page, posts, archivePost, pageUrl }) {
 }
 
 export async function getServerSideProps(context) {
+  const { res } = context;
+
+  res.setHeader(
+    'Cache-Tag',
+    context.resolvedUrl.replace('/', '')
+  );
+  res.setHeader(
+    'Cache-Tag-Debug',
+    context.resolvedUrl.replace('/', '')
+  );
+
   try {
     const page = await getPageRes(context.resolvedUrl);
     const result = await getBlogListRes();

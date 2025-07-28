@@ -91,7 +91,16 @@ export default function BlogPost({ blogPost, pageUrl }) {
     </>
   );
 }
-export async function getServerSideProps({ params }) {
+export async function getServerSideProps({ params, res }) {
+  res.setHeader(
+    'Cache-Tag',
+    params.post
+  );
+  res.setHeader(
+    'Cache-Tag-Debug',
+    params.post
+  );
+
   try {
     // const page = await getPageRes('/blog');
     const posts = await getBlogPostRes(`/blog/${params.post}`);
