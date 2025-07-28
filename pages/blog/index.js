@@ -65,14 +65,9 @@ export default function Blog({ page, posts, archivePost, pageUrl }) {
 export async function getServerSideProps(context) {
   const { res } = context;
 
-  res.setHeader(
-    'Cache-Tag',
-    context.resolvedUrl.replace('/', '')
-  );
-  res.setHeader(
-    'Cache-Tag-Debug',
-    context.resolvedUrl.replace('/', '')
-  );
+  res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=86400');
+  res.setHeader('Cache-Tag', context.resolvedUrl.replace('/', ''));
+  res.setHeader('Cache-Tag-Debug', context.resolvedUrl.replace('/', ''));
 
   try {
     const page = await getPageRes(context.resolvedUrl);

@@ -92,14 +92,9 @@ export default function BlogPost({ blogPost, pageUrl }) {
   );
 }
 export async function getServerSideProps({ params, res }) {
-  res.setHeader(
-    'Cache-Tag',
-    params.post
-  );
-  res.setHeader(
-    'Cache-Tag-Debug',
-    params.post
-  );
+  res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=86400');
+  res.setHeader('Cache-Tag', params.post);
+  res.setHeader('Cache-Tag-Debug', params.post);
 
   try {
     // const page = await getPageRes('/blog');
