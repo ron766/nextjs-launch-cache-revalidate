@@ -1,3 +1,5 @@
+import { getPageRes } from '../helper';
+
 export const getServerSideProps = async ({ res, resolvedUrl }) => {
   res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=86400');
   res.setHeader('Cache-Tag', 'home');
@@ -5,21 +7,29 @@ export const getServerSideProps = async ({ res, resolvedUrl }) => {
 
   console.log('HOME - 7 resolvedUrl', resolvedUrl);
 
-  return {
-    props: {
-      title: 'Home',
-      content: 'This is content for Home',
-      timestamp: new Date().toISOString(),
-    },
-  };
+  try {
+    const page = await getPageRes(resolvedUrl);
+    if (!page) throw new Error('404');
+
+    return {
+      props: {
+        pageUrl: resolvedUrl,
+        page,
+        timestamp: new Date().toISOString(),
+      },
+    };
+  } catch (error) {
+    console.error(error);
+    return { notFound: true };
+  }
 };
 
-export default function Home({ title, content, timestamp }) {
+export default function Home({ page, pageUrl, timestamp }) {
   return (
     <div>
-      <h1>{title}</h1>
+      <h1>{page?.title || 'Home'}</h1>
       <br />
-      <p>{content}</p>
+      <p>{page?.content || 'This is content for Home'}</p>
       <br />
       <p>Generated at: {timestamp}</p>
     </div>
