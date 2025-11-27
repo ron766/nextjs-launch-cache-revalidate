@@ -69,6 +69,8 @@ export async function getServerSideProps(context) {
   res.setHeader('Cache-Tag', context.resolvedUrl.replace('/', ''));
   res.setHeader('Cache-Tag-Debug', context.resolvedUrl.replace('/', ''));
 
+  console.log('BLOG - 72 context.resolvedUrl', context.resolvedUrl);
+
   try {
     const page = await getPageRes(context.resolvedUrl);
     const result = await getBlogListRes();

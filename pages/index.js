@@ -1,5 +1,10 @@
+export const getServerSideProps = async ({ res, resolvedUrl }) => {
+  res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=86400');
+  res.setHeader('Cache-Tag', 'home');
+  res.setHeader('Cache-Tag-Debug', 'home');
 
-export const getServerSideProps = async () => {
+  console.log('HOME - 7 resolvedUrl', resolvedUrl);
+
   return {
     props: {
       title: 'Home',
