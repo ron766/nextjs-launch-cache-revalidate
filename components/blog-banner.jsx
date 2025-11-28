@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function BlogBanner({ blogBanner }) {
+export default function BlogBanner({ blogBanner, cacheStatus, statusCode }) {
   return (
     <div
       className='blog-page-banner'
@@ -12,6 +12,11 @@ export default function BlogBanner({ blogBanner }) {
         {blogBanner.banner_title && (
           <h1 className='hero-title' {...blogBanner.$?.banner_title}>
             {blogBanner.banner_title}
+            {(cacheStatus || statusCode) && (
+              <span style={{ marginLeft: '10px', fontSize: '16px' }}>
+                (cf-cache-status: {cacheStatus || 'N/A'}, status: {statusCode || 'N/A'})
+              </span>
+            )}
           </h1>
         )}
 

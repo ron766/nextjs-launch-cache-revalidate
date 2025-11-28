@@ -11,6 +11,9 @@ import Skeleton from 'react-loading-skeleton';
 export default function Blog({ page, posts, archivePost, pageUrl }) {
 
   const [getBanner, setBanner] = useState(page);
+  const [cacheStatus, setCacheStatus] = useState(null);
+  const [statusCode, setStatusCode] = useState(null);
+
   async function fetchData() {
     try {
       const bannerRes = await getPageRes(pageUrl);
@@ -24,6 +27,21 @@ export default function Blog({ page, posts, archivePost, pageUrl }) {
   useEffect(() => {
     onEntryChange(() => fetchData());
   }, []);
+
+  useEffect(() => {
+    // Fetch the page to check cf-cache-status header
+    fetch(window.location.href, { method: 'HEAD' })
+      .then((response) => {
+        const status = response.headers.get('cf-cache-status');
+        console.log('cf-cache-status:', status);
+        console.log('Response status:', response.status);
+        setCacheStatus(status);
+        setStatusCode(response.status);
+      })
+      .catch((error) => {
+        console.error('Error fetching cache status:', error);
+      });
+  }, []);
   return (
     <>
       {getBanner.page_components ? (
@@ -33,6 +51,8 @@ export default function Blog({ page, posts, archivePost, pageUrl }) {
           contentTypeUid='page'
           entryUid={getBanner.uid}
           locale={getBanner.locale}
+          cacheStatus={cacheStatus}
+          statusCode={statusCode}
         />
       ) : (
         <Skeleton height={400} />
@@ -49,7 +69,14 @@ export default function Blog({ page, posts, archivePost, pageUrl }) {
         </div>
         <div className='blog-column-right'>
           {getBanner && getBanner.page_components[1].widget && (
-            <h2>{getBanner.page_components[1].widget.title_h2}</h2>
+            <h2>
+              {getBanner.page_components[1].widget.title_h2}
+              {/* {(cacheStatus || statusCode) && (
+                <span style={{ marginLeft: '10px', fontSize: '0.6em', color: '#666' }}>
+                  (cf-cache-status: {cacheStatus || 'N/A'}, status: {statusCode || 'N/A'})
+                </span>
+              )} */}
+            </h2>
           )}
           {archivePost ? (
             <ArchiveRelative blogs={archivePost} />

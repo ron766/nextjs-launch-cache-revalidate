@@ -6,7 +6,15 @@ import BlogBanner from './blog-banner';
 import BlogSection from './blog-section';
 
 export default function RenderComponents(props) {
-  const { pageComponents, blogPost, entryUid, contentTypeUid, locale } = props;
+  const {
+    pageComponents,
+    blogPost,
+    entryUid,
+    contentTypeUid,
+    locale,
+    cacheStatus,
+    statusCode
+  } = props;
   return (
     <div
       data-pageref={entryUid}
@@ -19,11 +27,15 @@ export default function RenderComponents(props) {
             <BlogBanner
               blogBanner={component.hero_banner}
               key={`component-${key}`}
+              cacheStatus={cacheStatus}
+              statusCode={statusCode}
             />
           ) : (
             <HeroBanner
               banner={component.hero_banner}
               key={`component-${key}`}
+              cacheStatus={cacheStatus}
+              statusCode={statusCode}
             />
           );
         }

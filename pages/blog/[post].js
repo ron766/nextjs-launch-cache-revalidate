@@ -11,6 +11,9 @@ import ArchiveRelative from '../../components/archive-relative';
 export default function BlogPost({ blogPost, pageUrl }) {
   
   const [getPost, setPost] = useState({ post: blogPost });
+  const [cacheStatus, setCacheStatus] = useState(null);
+  const [statusCode, setStatusCode] = useState(null);
+
   async function fetchData() {
     try {
       const entryRes = await getBlogPostRes(pageUrl);
@@ -24,6 +27,21 @@ export default function BlogPost({ blogPost, pageUrl }) {
   useEffect(() => {
     onEntryChange(() => fetchData());
   }, [blogPost]);
+
+  useEffect(() => {
+    // Fetch the page to check cf-cache-status header
+    fetch(window.location.href, { method: 'HEAD' })
+      .then((response) => {
+        const status = response.headers.get('cf-cache-status');
+        console.log('cf-cache-status:', status);
+        console.log('Response status:', response.status);
+        setCacheStatus(status);
+        setStatusCode(response.status);
+      })
+      .catch((error) => {
+        console.error('Error fetching cache status:', error);
+      });
+  }, []);
 
   const { post, banner } = getPost;
   return (
@@ -42,7 +60,14 @@ export default function BlogPost({ blogPost, pageUrl }) {
       <div className='blog-container'>
         <article className='blog-detail'>
           {post && post.title ? (
-            <h2 {...post.$?.title}>{post.title}</h2>
+            <h2 {...post.$?.title}>
+              {post.title}
+              {(cacheStatus || statusCode) && (
+                <span style={{ marginLeft: '10px', fontSize: '0.6em', color: '#666' }}>
+                  (cf-cache-status: {cacheStatus || 'N/A'}, status: {statusCode || 'N/A'})
+                </span>
+              )}
+            </h2>
           ) : (
             <h2>
               <Skeleton />
