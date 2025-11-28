@@ -8,11 +8,10 @@ import ArchiveRelative from '../../components/archive-relative';
 import Skeleton from 'react-loading-skeleton';
 
 
-export default function Blog({ page, posts, archivePost, pageUrl }) {
+export default function Blog({ page, posts, archivePost, pageUrl, statusCode: serverStatusCode }) {
 
   const [getBanner, setBanner] = useState(page);
   const [cacheStatus, setCacheStatus] = useState(null);
-  const [statusCode, setStatusCode] = useState(null);
 
   async function fetchData() {
     try {
@@ -30,18 +29,20 @@ export default function Blog({ page, posts, archivePost, pageUrl }) {
 
   useEffect(() => {
     // Fetch the page to check cf-cache-status header
-    fetch(window.location.href, { method: 'HEAD' })
+    fetch(window.location.href, { 
+      method: 'GET',
+      cache: 'default'
+    })
       .then((response) => {
         const status = response.headers.get('cf-cache-status');
         console.log('cf-cache-status:', status);
-        console.log('Response status:', response.status);
+        console.log('Response status from getServerSideProps:', serverStatusCode);
         setCacheStatus(status);
-        setStatusCode(response.status);
       })
       .catch((error) => {
         console.error('Error fetching cache status:', error);
       });
-  }, []);
+  }, [serverStatusCode]);
   return (
     <>
       {getBanner.page_components ? (
@@ -111,12 +112,18 @@ export async function getServerSideProps(context) {
         posts.push(blogs);
       }
     });
+    
+    // Get the response status code (defaults to 200 if not set)
+    const statusCode = res.statusCode || 200;
+    console.log('Response status code from getServerSideProps:', statusCode);
+    
     return {
       props: {
         pageUrl: context.resolvedUrl,
         page,
         posts,
         archivePost,
+        statusCode,
       },
     };
   } catch (error) {

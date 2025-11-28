@@ -8,11 +8,10 @@ import RenderComponents from '../../components/render-components';
 import ArchiveRelative from '../../components/archive-relative';
 
 
-export default function BlogPost({ blogPost, pageUrl }) {
+export default function BlogPost({ blogPost, pageUrl, statusCode: serverStatusCode }) {
   
   const [getPost, setPost] = useState({ post: blogPost });
   const [cacheStatus, setCacheStatus] = useState(null);
-  const [statusCode, setStatusCode] = useState(null);
 
   async function fetchData() {
     try {
@@ -30,18 +29,20 @@ export default function BlogPost({ blogPost, pageUrl }) {
 
   useEffect(() => {
     // Fetch the page to check cf-cache-status header
-    fetch(window.location.href, { method: 'HEAD' })
+    fetch(window.location.href, { 
+      method: 'GET',
+      cache: 'default'
+    })
       .then((response) => {
         const status = response.headers.get('cf-cache-status');
         console.log('cf-cache-status:', status);
-        console.log('Response status:', response.status);
+        console.log('Response status from getServerSideProps:', serverStatusCode);
         setCacheStatus(status);
-        setStatusCode(response.status);
       })
       .catch((error) => {
         console.error('Error fetching cache status:', error);
       });
-  }, []);
+  }, [serverStatusCode]);
 
   const { post, banner } = getPost;
   return (
@@ -62,9 +63,9 @@ export default function BlogPost({ blogPost, pageUrl }) {
           {post && post.title ? (
             <h2 {...post.$?.title}>
               {post.title}
-              {(cacheStatus || statusCode) && (
+              {(cacheStatus || serverStatusCode) && (
                 <span style={{ marginLeft: '10px', fontSize: '0.6em', color: '#666' }}>
-                  (cf-cache-status: {cacheStatus || 'N/A'}, status: {statusCode || 'N/A'})
+                  (cf-cache-status: {cacheStatus || 'N/A'}, status: {serverStatusCode || 'N/A'})
                 </span>
               )}
             </h2>
@@ -127,10 +128,15 @@ export async function getServerSideProps({ params, res }) {
     // if (!page || !posts) throw new Error('404');
     if (!posts) throw new Error('404');
 
+    // Get the response status code (defaults to 200 if not set)
+    const statusCode = res.statusCode || 200;
+    console.log('Response status code from getServerSideProps:', statusCode);
+
     return {
       props: {
         pageUrl: `/blog/${params.post}`,
         blogPost: posts,
+        statusCode,
         // page,
       },
     };

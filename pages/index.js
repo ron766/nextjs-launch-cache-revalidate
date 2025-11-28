@@ -12,11 +12,16 @@ export const getServerSideProps = async ({ res, resolvedUrl }) => {
     const page = await getPageRes(resolvedUrl);
     if (!page) throw new Error('404');
 
+    // Get the response status code (defaults to 200 if not set)
+    const statusCode = res.statusCode || 200;
+    console.log('Response status code from getServerSideProps:', statusCode);
+
     return {
       props: {
         pageUrl: resolvedUrl,
         page,
         timestamp: new Date().toISOString(),
+        statusCode,
       },
     };
   } catch (error) {
@@ -25,32 +30,33 @@ export const getServerSideProps = async ({ res, resolvedUrl }) => {
   }
 };
 
-export default function Home({ page, pageUrl, timestamp }) {
+export default function Home({ page, pageUrl, timestamp, statusCode: serverStatusCode }) {
   const [cacheStatus, setCacheStatus] = useState(null);
-  const [statusCode, setStatusCode] = useState(null);
 
   useEffect(() => {
     // Fetch the page to check cf-cache-status header
-    fetch(window.location.href, { method: 'HEAD' })
+    fetch(window.location.href, { 
+      method: 'GET',
+      cache: 'default'
+    })
       .then((response) => {
         const status = response.headers.get('cf-cache-status');
         console.log('cf-cache-status:', status);
-        console.log('Response status:', response.status);
+        console.log('Response status from getServerSideProps:', serverStatusCode);
         setCacheStatus(status);
-        setStatusCode(response.status);
       })
       .catch((error) => {
         console.error('Error fetching cache status:', error);
       });
-  }, []);
+  }, [serverStatusCode]);
 
   return (
     <div>
       <h1>
         {page?.title || 'Home'}
-        {(cacheStatus || statusCode) && (
+        {(cacheStatus || serverStatusCode) && (
           <span style={{ marginLeft: '10px', fontSize: '0.6em' }}>
-            (cf-cache-status: {cacheStatus || 'N/A'}, status: {statusCode || 'N/A'})
+            (cf-cache-status: {cacheStatus || 'N/A'}, status: {serverStatusCode || 'N/A'})
           </span>
         )}
       </h1>
