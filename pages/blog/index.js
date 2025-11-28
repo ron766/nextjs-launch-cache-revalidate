@@ -31,11 +31,27 @@ export default function Blog({ page, posts, archivePost, pageUrl }) {
   useEffect(() => {
     // Get the actual response status from the initial page load (matches network tab)
     const navigationEntry = performance.getEntriesByType('navigation')[0];
-    const actualStatus = navigationEntry?.responseStatus || null;
     
-    if (actualStatus !== null) {
-      setStatusCode(actualStatus);
-      console.log('Actual response status (from network tab):', actualStatus);
+    if (navigationEntry) {
+      // Check if responseStatus is available (some browsers don't support it)
+      let actualStatus = navigationEntry.responseStatus;
+      
+      // If responseStatus is not available or shows 200, check for 304 indicators:
+      // - transferSize === 0 indicates served from cache (304 response has no body)
+      // - Very fast response time also indicates cache
+      if (!actualStatus || actualStatus === 200) {
+        if (navigationEntry.transferSize === 0 && navigationEntry.decodedBodySize > 0) {
+          // Served from cache - likely a 304 response
+          actualStatus = 304;
+        }
+      }
+      
+      if (actualStatus !== null && actualStatus !== undefined) {
+        setStatusCode(actualStatus);
+        console.log('Actual response status (from network tab):', actualStatus);
+        console.log('transferSize:', navigationEntry.transferSize);
+        console.log('decodedBodySize:', navigationEntry.decodedBodySize);
+      }
     }
 
     // Fetch the page to check cf-cache-status header
