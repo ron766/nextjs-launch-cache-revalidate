@@ -8,10 +8,11 @@ import ArchiveRelative from '../../components/archive-relative';
 import Skeleton from 'react-loading-skeleton';
 
 
-export default function Blog({ page, posts, archivePost, pageUrl, statusCode: serverStatusCode }) {
+export default function Blog({ page, posts, archivePost, pageUrl }) {
 
   const [getBanner, setBanner] = useState(page);
   const [cacheStatus, setCacheStatus] = useState(null);
+  const [statusCode, setStatusCode] = useState(null);
 
   async function fetchData() {
     try {
@@ -28,6 +29,15 @@ export default function Blog({ page, posts, archivePost, pageUrl, statusCode: se
   }, []);
 
   useEffect(() => {
+    // Get the actual response status from the initial page load (matches network tab)
+    const navigationEntry = performance.getEntriesByType('navigation')[0];
+    const actualStatus = navigationEntry?.responseStatus || null;
+    
+    if (actualStatus !== null) {
+      setStatusCode(actualStatus);
+      console.log('Actual response status (from network tab):', actualStatus);
+    }
+
     // Fetch the page to check cf-cache-status header
     fetch(window.location.href, { 
       method: 'GET',
@@ -36,13 +46,12 @@ export default function Blog({ page, posts, archivePost, pageUrl, statusCode: se
       .then((response) => {
         const status = response.headers.get('cf-cache-status');
         console.log('cf-cache-status:', status);
-        console.log('Response status from getServerSideProps:', serverStatusCode);
         setCacheStatus(status);
       })
       .catch((error) => {
         console.error('Error fetching cache status:', error);
       });
-  }, [serverStatusCode]);
+  }, []);
   return (
     <>
       {getBanner.page_components ? (
@@ -113,17 +122,12 @@ export async function getServerSideProps(context) {
       }
     });
     
-    // Get the response status code (defaults to 200 if not set)
-    const statusCode = res.statusCode || 200;
-    console.log('Response status code from getServerSideProps:', statusCode);
-    
     return {
       props: {
         pageUrl: context.resolvedUrl,
         page,
         posts,
         archivePost,
-        statusCode,
       },
     };
   } catch (error) {

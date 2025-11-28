@@ -12,16 +12,11 @@ export const getServerSideProps = async ({ res, resolvedUrl }) => {
     const page = await getPageRes(resolvedUrl);
     if (!page) throw new Error('404');
 
-    // Get the response status code (defaults to 200 if not set)
-    const statusCode = res.statusCode || 200;
-    console.log('Response status code from getServerSideProps:', statusCode);
-
     return {
       props: {
         pageUrl: resolvedUrl,
         page,
         timestamp: new Date().toISOString(),
-        statusCode,
       },
     };
   } catch (error) {
@@ -30,10 +25,20 @@ export const getServerSideProps = async ({ res, resolvedUrl }) => {
   }
 };
 
-export default function Home({ page, pageUrl, timestamp, statusCode: serverStatusCode }) {
+export default function Home({ page, pageUrl, timestamp }) {
   const [cacheStatus, setCacheStatus] = useState(null);
+  const [statusCode, setStatusCode] = useState(null);
 
   useEffect(() => {
+    // Get the actual response status from the initial page load (matches network tab)
+    const navigationEntry = performance.getEntriesByType('navigation')[0];
+    const actualStatus = navigationEntry?.responseStatus || null;
+    
+    if (actualStatus !== null) {
+      setStatusCode(actualStatus);
+      console.log('Actual response status (from network tab):', actualStatus);
+    }
+
     // Fetch the page to check cf-cache-status header
     fetch(window.location.href, { 
       method: 'GET',
@@ -42,21 +47,20 @@ export default function Home({ page, pageUrl, timestamp, statusCode: serverStatu
       .then((response) => {
         const status = response.headers.get('cf-cache-status');
         console.log('cf-cache-status:', status);
-        console.log('Response status from getServerSideProps:', serverStatusCode);
         setCacheStatus(status);
       })
       .catch((error) => {
         console.error('Error fetching cache status:', error);
       });
-  }, [serverStatusCode]);
+  }, []);
 
   return (
     <div>
       <h1>
         {page?.title || 'Home'}
-        {(cacheStatus || serverStatusCode) && (
+        {(cacheStatus || statusCode !== null) && (
           <span style={{ marginLeft: '10px', fontSize: '0.6em' }}>
-            (cf-cache-status: {cacheStatus || 'N/A'}, status: {serverStatusCode || 'N/A'})
+            (cf-cache-status: {cacheStatus || 'N/A'}, status: {statusCode !== null ? statusCode : 'N/A'})
           </span>
         )}
       </h1>

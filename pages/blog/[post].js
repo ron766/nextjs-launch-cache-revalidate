@@ -8,10 +8,11 @@ import RenderComponents from '../../components/render-components';
 import ArchiveRelative from '../../components/archive-relative';
 
 
-export default function BlogPost({ blogPost, pageUrl, statusCode: serverStatusCode }) {
+export default function BlogPost({ blogPost, pageUrl }) {
   
   const [getPost, setPost] = useState({ post: blogPost });
   const [cacheStatus, setCacheStatus] = useState(null);
+  const [statusCode, setStatusCode] = useState(null);
 
   async function fetchData() {
     try {
@@ -28,6 +29,15 @@ export default function BlogPost({ blogPost, pageUrl, statusCode: serverStatusCo
   }, [blogPost]);
 
   useEffect(() => {
+    // Get the actual response status from the initial page load (matches network tab)
+    const navigationEntry = performance.getEntriesByType('navigation')[0];
+    const actualStatus = navigationEntry?.responseStatus || null;
+    
+    if (actualStatus !== null) {
+      setStatusCode(actualStatus);
+      console.log('Actual response status (from network tab):', actualStatus);
+    }
+
     // Fetch the page to check cf-cache-status header
     fetch(window.location.href, { 
       method: 'GET',
@@ -36,13 +46,12 @@ export default function BlogPost({ blogPost, pageUrl, statusCode: serverStatusCo
       .then((response) => {
         const status = response.headers.get('cf-cache-status');
         console.log('cf-cache-status:', status);
-        console.log('Response status from getServerSideProps:', serverStatusCode);
         setCacheStatus(status);
       })
       .catch((error) => {
         console.error('Error fetching cache status:', error);
       });
-  }, [serverStatusCode]);
+  }, []);
 
   const { post, banner } = getPost;
   return (
@@ -63,9 +72,9 @@ export default function BlogPost({ blogPost, pageUrl, statusCode: serverStatusCo
           {post && post.title ? (
             <h2 {...post.$?.title}>
               {post.title}
-              {(cacheStatus || serverStatusCode) && (
+              {(cacheStatus || statusCode !== null) && (
                 <span style={{ marginLeft: '10px', fontSize: '0.6em', color: '#666' }}>
-                  (cf-cache-status: {cacheStatus || 'N/A'}, status: {serverStatusCode || 'N/A'})
+                  (cf-cache-status: {cacheStatus || 'N/A'}, status: {statusCode !== null ? statusCode : 'N/A'})
                 </span>
               )}
             </h2>
@@ -128,15 +137,10 @@ export async function getServerSideProps({ params, res }) {
     // if (!page || !posts) throw new Error('404');
     if (!posts) throw new Error('404');
 
-    // Get the response status code (defaults to 200 if not set)
-    const statusCode = res.statusCode || 200;
-    console.log('Response status code from getServerSideProps:', statusCode);
-
     return {
       props: {
         pageUrl: `/blog/${params.post}`,
         blogPost: posts,
-        statusCode,
         // page,
       },
     };
